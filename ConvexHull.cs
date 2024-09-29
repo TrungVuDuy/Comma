@@ -25,43 +25,78 @@ namespace Comma
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            // TODO: start here modifying the behaviour of your command.
-            // ---
-            RhinoApp.WriteLine("The {0} command will add a line right now.", EnglishName);
+            // Select the points
+            if (!SelectPoints(out List<Point3d> inputPoints))
+                return Result.Failure;
+            // Check for errors
+            if (AreThereErrors(inputPoints))
+                return Result.Failure;
 
-            Point3d pt0;
-            using (GetPoint getPointAction = new GetPoint())
+            // Calculate the Convex Hull
+            Polyline resCH = ConvexHullLogic.CalculateCH(inputPoints);
+
+            // Add the polyline to the Rhino document
+            if (resCH != null && resCH.IsValid)
             {
-                getPointAction.SetCommandPrompt("Please select the start point");
-                if (getPointAction.Get() != GetResult.Point)
-                {
-                    RhinoApp.WriteLine("No start point was selected.");
-                    return getPointAction.CommandResult();
-                }
-                pt0 = getPointAction.Point();
+                doc.Objects.AddPolyline(resCH);
+                doc.Views.Redraw(); // Redraw the view to ensure the polyline is visible
             }
-
-            Point3d pt1;
-            using (GetPoint getPointAction = new GetPoint())
+            else
             {
-                getPointAction.SetCommandPrompt("Please select the end point");
-                getPointAction.SetBasePoint(pt0, true);
-                getPointAction.DynamicDraw +=
-                  (sender, e) => e.Display.DrawLine(pt0, e.CurrentPoint, System.Drawing.Color.DarkRed);
-                if (getPointAction.Get() != GetResult.Point)
-                {
-                    RhinoApp.WriteLine("No end point was selected.");
-                    return getPointAction.CommandResult();
-                }
-                pt1 = getPointAction.Point();
+                RhinoApp.WriteLine("Failed to create a valid convex hull polyline.");
+                return Result.Failure;
             }
-
-            doc.Objects.AddLine(pt0, pt1);
-            doc.Views.Redraw();
-            RhinoApp.WriteLine("The {0} command added one line to the document.", EnglishName);
-
-            // ---
             return Result.Success;
+        }
+
+        private bool AreThereErrors(List<Point3d> inputPoints)
+        {
+            //if(inputPoints.Count < 3)
+            //{
+            //    RhinoApp.WriteLine("We need at least 3 points");
+            //    return true;
+            //}
+            if (AreThereDuplicates(inputPoints))
+            {
+                RhinoApp.WriteLine("ERROR - There are some duplicates");
+            }
+            return false;
+        }
+        private bool AreThereDuplicates(List<Point3d> inputPoints)
+        {
+            int i, j;
+
+            for (i = 0; i < inputPoints.Count; i++)
+            {
+                for (j = i + 1; j < inputPoints.Count; j++)
+                {
+                    if ((inputPoints[j] - inputPoints[i]).Length < 0.0001)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        private bool SelectPoints(out List<Point3d> inputPoints)
+        {
+            var go = new GetObject();
+            go.GeometryFilter = Rhino.DocObjects.ObjectType.Point;
+            go.GetMultiple(1, 0);
+
+            if (go.CommandResult() != Result.Success || go.ObjectCount < 3)
+            {
+                inputPoints = null;
+                return false;
+            }
+            inputPoints = new List<Point3d>(go.ObjectCount);
+
+            for (int i = 0; i < go.ObjectCount; i++)
+            {
+                Point3d point = go.Object(i).Point().Location;
+                inputPoints.Add(point);
+            }
+            return true;
         }
     }
 }
