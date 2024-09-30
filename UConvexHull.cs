@@ -8,9 +8,9 @@ using System.Collections.Generic;
 
 namespace Comma
 {
-    public class ConvexHull : Command
+    public class UConvexHull : Command
     {
-        public ConvexHull()
+        public UConvexHull()
         {
             // Rhino only creates one instance of each command class defined in a
             // plug-in, so it is safe to store a refence in a static property.
@@ -18,10 +18,10 @@ namespace Comma
         }
 
         ///<summary>The only instance of this command.</summary>
-        public static ConvexHull Instance { get; private set; }
+        public static UConvexHull Instance { get; private set; }
 
         ///<returns>The command name as it appears on the Rhino command line.</returns>
-        public override string EnglishName => "ConvexHull";
+        public override string EnglishName => "UConvexHull";
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
@@ -33,7 +33,7 @@ namespace Comma
                 return Result.Failure;
 
             // Calculate the Convex Hull
-            Polyline resCH = ConvexHullLogic.CalculateCH(inputPoints);
+            Polyline resCH = UConvexHullLogic.CalculateCH(inputPoints);
 
             // Add the polyline to the Rhino document
             if (resCH != null && resCH.IsValid)

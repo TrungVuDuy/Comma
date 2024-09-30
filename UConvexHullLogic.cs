@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Comma
 {
-    internal class ConvexHullLogic
+    internal class UConvexHullLogic
     {
         internal static Polyline CalculateCH(List<Point3d> inputPoints)
         {
