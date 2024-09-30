@@ -1,9 +1,7 @@
 ﻿using Rhino;
 using Rhino.Commands;
 using Rhino.Geometry;
-using Rhino.Input;
 using Rhino.Input.Custom;
-using System;
 using System.Collections.Generic;
 
 namespace Comma
@@ -14,6 +12,7 @@ namespace Comma
         {
             // Rhino only creates one instance of each command class defined in a
             // plug-in, so it is safe to store a refence in a static property.
+            //TVD
             Instance = this;
         }
 
